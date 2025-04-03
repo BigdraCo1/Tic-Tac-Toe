@@ -116,9 +116,10 @@ public entry fun make_game_challenge(
 public entry fun next(game: &mut Game, player: &PlayerCap, pos: u64) {
     assert!(game.next_player == object::id(player), ENotYourTurn);
     assert!(game.winner.is_none(), EAlreadySettleDown);
-
-    let row = pos / 3;
-    let col = pos % 3;
+    assert!(pos > 0 && pos <= 9, EInvalidPos);
+    
+    let row = (pos - 1 / 3) % 3;
+    let col = pos - 1 % 3;
 
     if (object::id(player) == game.player1) {
         game.next_player = game.player2;
@@ -140,8 +141,8 @@ public entry fun next(game: &mut Game, player: &PlayerCap, pos: u64) {
 
 // === Private Functions ===
 fun settle_down(self: &mut Game, pos: u64) {
-    let row = pos / 3;
-    let col = pos % 3;
+    let row = (pos - 1 / 3) % 3;
+    let col = pos - 1 % 3;
 
     let current_player = self.board[row][col];
     if (current_player.is_some()) {
