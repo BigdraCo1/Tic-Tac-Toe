@@ -1,18 +1,103 @@
 #[test_only]
 module template::template_tests;
-// uncomment this line to import the module
-// use template::template;
-// uncomment this line to call the init_for_testing
-// use template::template::init_for_testing;
-
-const ENotImplemented: u64 = 0;
 
 #[test]
 fun test_template() {
-    // pass
-}
+    use sui::test_scenario;
+    use template::template::{Self, make_game_challenge, next, PlayerCap, Game};
 
-#[test, expected_failure(abort_code = ::template::template_tests::ENotImplemented)]
-fun test_template_fail() {
-    abort ENotImplemented
+    let first_player: address = @0x0001;
+    let second_player: address = @0x0002;
+
+    let mut scenario = test_scenario::begin(@0xAAAA);
+    {
+        template::init_for_testing(scenario.ctx());
+    };
+
+    scenario.next_tx(second_player);
+    {
+        make_game_challenge(first_player, scenario.ctx())
+    };
+
+    scenario.next_tx(first_player);
+    {
+        let mut game = scenario.take_shared<Game>();
+        let cap = scenario.take_from_sender<PlayerCap>();
+
+        //  | |
+        // -+-+-
+        //  |O|
+        // -+-+-
+        //  | |
+        next(&mut game, &cap, 5);
+
+        test_scenario::return_shared(game);
+        scenario.return_to_sender(cap);
+    };
+
+    scenario.next_tx(second_player);
+    {
+        let mut game = scenario.take_shared<Game>();
+        let cap = scenario.take_from_sender<PlayerCap>();
+
+        //  | |X
+        // -+-+-
+        //  |O|
+        // -+-+-
+        //  | |
+        next(&mut game, &cap, 3);
+
+        test_scenario::return_shared(game);
+        scenario.return_to_sender(cap);
+    };
+
+    scenario.next_tx(first_player);
+    {
+        let mut game = scenario.take_shared<Game>();
+        let cap = scenario.take_from_sender<PlayerCap>();
+
+        //  | |X
+        // -+-+-
+        //  |O|
+        // -+-+-
+        //  |O|
+        next(&mut game, &cap, 8);
+
+        test_scenario::return_shared(game);
+        scenario.return_to_sender(cap);
+    };
+
+    scenario.next_tx(second_player);
+    {
+        let mut game = scenario.take_shared<Game>();
+        let cap = scenario.take_from_sender<PlayerCap>();
+
+        //  | |X
+        // -+-+-
+        //  |O|X
+        // -+-+-
+        //  |O|
+        next(&mut game, &cap, 6);
+
+        test_scenario::return_shared(game);
+        scenario.return_to_sender(cap);
+    };
+
+    scenario.next_tx(first_player);
+    {
+        let mut game = scenario.take_shared<Game>();
+        let cap = scenario.take_from_sender<PlayerCap>();
+
+        //  |O|X
+        // -+-+-
+        //  |O|X
+        // -+-+-
+        //  |O|
+        next(&mut game, &cap, 2);
+
+        test_scenario::return_shared(game);
+        scenario.return_to_sender(cap);
+    };
+
+    scenario.end();
 }
